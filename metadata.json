@@ -1,5 +1,6 @@
 {
   "owner": "reactivecircus",
   "name": "android-emulator-runner",
-  "visibility": ""
+  "visibility": "internal",
+  "description": "A GitHub Action for installing, configuring and running hardware-accelerated Android Emulators on macOS virtual machines."
 }

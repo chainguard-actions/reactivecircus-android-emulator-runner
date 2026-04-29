@@ -1,5 +1,7 @@
 # reactivecircus/android-emulator-runner
 
+A GitHub Action for installing, configuring and running hardware-accelerated Android Emulators on macOS virtual machines.
+
 Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/reactivecircus/android-emulator-runner](https://github.com/reactivecircus/android-emulator-runner).
 
 ## Versions
