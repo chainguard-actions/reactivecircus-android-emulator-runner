@@ -8,7 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
-| v2.37.0 | [`v2.37.0`](https://github.com/chainguard-actions/reactivecircus--android-emulator-runner/tree/v2.37.0) | — |
+| v2.37.0 | [`v2.37.0`](https://github.com/chainguard-actions/reactivecircus-android-emulator-runner/tree/v2.37.0) | — |
 
 ## Privacy
 
