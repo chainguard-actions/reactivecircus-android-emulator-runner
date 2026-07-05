@@ -1,0 +1,66 @@
+name: Test optional inputs - Android Emulator Runner
+# Exercises all optional inputs not covered by other test files.
+# The emulator cannot actually boot in act (no KVM/Android SDK),
+# so the action step uses continue-on-error: true. The meaningful
+# assertions are the static checks that verify input declarations.
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify optional inputs are declared in action.yml
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+
+          check_input() {
+            local input_name="$1"
+            if ! grep -q "${input_name}:" "$ACTION_YML"; then
+              echo "FAIL: input '${input_name}' not found in action.yml"
+              exit 1
+            fi
+            echo "  OK: ${input_name}"
+          }
+
+          echo "Checking inputs covered by this test..."
+          check_input "system-image-api-level"
+          check_input "profile"
+          check_input "ram-size"
+          check_input "heap-size"
+          check_input "sdcard-path-or-size"
+          check_input "disk-size"
+          check_input "emulator-build"
+          check_input "working-directory"
+          check_input "ndk"
+          check_input "cmake"
+          check_input "pre-emulator-launch-script"
+          echo "PASS: all targeted optional inputs declared"
+
+      - name: Create working directory for emulator action
+        run: mkdir -p "$GITHUB_WORKSPACE/android-project"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-level: 29
+          system-image-api-level: 29
+          profile: Nexus 6
+          ram-size: 2048M
+          heap-size: 512M
+          sdcard-path-or-size: 1000M
+          disk-size: 6G
+          emulator-build: 7425822
+          working-directory: ./android-project
+          ndk: 21.0.6113669
+          cmake: 3.10.2.4988404
+          pre-emulator-launch-script: echo "pre-launch"
+          script: echo "hello from emulator"
+
+      - name: Note about emulator step
+        run: |
+          echo "The emulator action step is expected to fail in act (no KVM/Android SDK)."
+          echo "Input declaration checks above are the meaningful assertions."
+          echo "PASS"

@@ -1,0 +1,117 @@
+name: Test input declarations - Android Emulator Runner
+# Validates that all documented inputs are declared in action.yml with
+# correct defaults and required flags. Does not boot an emulator.
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify optional inputs with defaults
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+
+          check_input() {
+            local input_name="$1"
+            if ! grep -q "${input_name}:" "$ACTION_YML"; then
+              echo "FAIL: input '${input_name}' not found in action.yml"
+              exit 1
+            fi
+            echo "  OK: ${input_name}"
+          }
+
+          echo "Checking optional inputs..."
+          check_input "target"
+          check_input "arch"
+          check_input "profile"
+          check_input "cores"
+          check_input "ram-size"
+          check_input "heap-size"
+          check_input "sdcard-path-or-size"
+          check_input "disk-size"
+          check_input "avd-name"
+          check_input "force-avd-creation"
+          check_input "emulator-boot-timeout"
+          check_input "emulator-port"
+          check_input "emulator-options"
+          check_input "disable-animations"
+          check_input "disable-spellchecker"
+          check_input "disable-linux-hw-accel"
+          check_input "enable-hw-keyboard"
+          check_input "emulator-build"
+          check_input "working-directory"
+          check_input "ndk"
+          check_input "cmake"
+          check_input "channel"
+          check_input "pre-emulator-launch-script"
+          check_input "system-image-api-level"
+          echo "PASS: all optional inputs declared"
+
+      - name: Verify emulator-boot-timeout default is 600
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -A2 'emulator-boot-timeout:' "$ACTION_YML" | grep -q "default: '600'"; then
+            echo "FAIL: emulator-boot-timeout default is not 600"
+            exit 1
+          fi
+          echo "PASS: emulator-boot-timeout default is 600"
+
+      - name: Verify emulator-port default is 5554
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -A2 'emulator-port:' "$ACTION_YML" | grep -q "default: '5554'"; then
+            echo "FAIL: emulator-port default is not 5554"
+            exit 1
+          fi
+          echo "PASS: emulator-port default is 5554"
+
+      - name: Verify disable-animations default is true
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -A2 'disable-animations:' "$ACTION_YML" | grep -q "default: 'true'"; then
+            echo "FAIL: disable-animations default is not true"
+            exit 1
+          fi
+          echo "PASS: disable-animations default is true"
+
+      - name: Verify channel default is stable
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -A2 'channel:' "$ACTION_YML" | grep -q "default: 'stable'"; then
+            echo "FAIL: channel default is not stable"
+            exit 1
+          fi
+          echo "PASS: channel default is stable"
+
+      - name: Verify force-avd-creation default is true
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -A2 'force-avd-creation:' "$ACTION_YML" | grep -q "default: 'true'"; then
+            echo "FAIL: force-avd-creation default is not true"
+            exit 1
+          fi
+          echo "PASS: force-avd-creation default is true"
+
+      - name: Verify disable-linux-hw-accel default is auto
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -A2 'disable-linux-hw-accel:' "$ACTION_YML" | grep -q "default: 'auto'"; then
+            echo "FAIL: disable-linux-hw-accel default is not auto"
+            exit 1
+          fi
+          echo "PASS: disable-linux-hw-accel default is auto"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-level: 29
+          script: echo "hello from emulator"
+
+      - name: Note about emulator step
+        run: |
+          echo "The emulator action step is expected to fail in act (no KVM/Android SDK)."
+          echo "Input declaration checks above are the meaningful assertions."
+          echo "PASS"

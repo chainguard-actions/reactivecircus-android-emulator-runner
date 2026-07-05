@@ -1,0 +1,107 @@
+name: Test action metadata - Android Emulator Runner
+# Validates action.yml metadata: name, description, author, branding, and
+# the node24 runtime configuration.
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify action name
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -q "name: 'Android Emulator Runner'" "$ACTION_YML"; then
+            echo "FAIL: action name is not 'Android Emulator Runner'"
+            exit 1
+          fi
+          echo "PASS: action name is correct"
+
+      - name: Verify action author
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -q "author: 'Reactive Circus'" "$ACTION_YML"; then
+            echo "FAIL: action author is not 'Reactive Circus'"
+            exit 1
+          fi
+          echo "PASS: action author is correct"
+
+      - name: Verify branding icon and color
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -q "icon: 'smartphone'" "$ACTION_YML"; then
+            echo "FAIL: branding icon is not 'smartphone'"
+            exit 1
+          fi
+          if ! grep -q "color: 'green'" "$ACTION_YML"; then
+            echo "FAIL: branding color is not 'green'"
+            exit 1
+          fi
+          echo "PASS: branding icon and color are correct"
+
+      - name: Verify node24 runtime and main entrypoint
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -q "using: 'node24'" "$ACTION_YML"; then
+            echo "FAIL: runtime is not node24"
+            exit 1
+          fi
+          if ! grep -q "main: 'lib/main.js'" "$ACTION_YML"; then
+            echo "FAIL: main entrypoint is not lib/main.js"
+            exit 1
+          fi
+          echo "PASS: runtime and entrypoint are correct"
+
+      - name: Verify lib/main.js exists and is non-empty
+        run: |
+          MAIN_JS="$GITHUB_WORKSPACE/lib/main.js"
+          if [ ! -f "$MAIN_JS" ]; then
+            echo "FAIL: lib/main.js does not exist"
+            exit 1
+          fi
+          SIZE=$(wc -c < "$MAIN_JS")
+          echo "lib/main.js size: $SIZE bytes"
+          if [ "$SIZE" -eq 0 ]; then
+            echo "FAIL: lib/main.js is empty"
+            exit 1
+          fi
+          echo "PASS: lib/main.js exists and is non-empty"
+
+      - name: Verify api-level and script are required inputs
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          # Check api-level has required: true
+          if ! grep -A3 'api-level:' "$ACTION_YML" | grep -q 'required: true'; then
+            echo "FAIL: api-level is not marked as required"
+            exit 1
+          fi
+          # Check script has required: true
+          if ! grep -A3 'script:' "$ACTION_YML" | grep -q 'required: true'; then
+            echo "FAIL: script is not marked as required"
+            exit 1
+          fi
+          echo "PASS: api-level and script are both required"
+
+      - name: Verify system-image-api-level is optional
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          # system-image-api-level should have required: false (not required: true)
+          if grep -A3 'system-image-api-level:' "$ACTION_YML" | grep -q 'required: true'; then
+            echo "FAIL: system-image-api-level should be optional (not required)"
+            exit 1
+          fi
+          echo "PASS: system-image-api-level is optional"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-level: 29
+          script: echo "hello from emulator"
+
+      - name: Note about emulator step
+        run: |
+          echo "The emulator action step is expected to fail in act (no KVM/Android SDK)."
+          echo "Metadata checks above are the meaningful assertions."
+          echo "PASS"

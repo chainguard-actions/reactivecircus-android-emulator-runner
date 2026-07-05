@@ -1,0 +1,79 @@
+name: Test basic usage - Android Emulator Runner
+# NOTE: This action requires Android SDK, hardware acceleration (KVM), and
+# a real Android emulator. It cannot fully execute in act (no KVM/Android SDK).
+# The action step uses continue-on-error: true because it will fail at SDK
+# installation in act. Static assertions verify the action structure.
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify action.yml exists
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/action.yml" ]; then
+            echo "FAIL: action.yml not found in workspace"
+            exit 1
+          fi
+          echo "PASS: action.yml found"
+
+      - name: Verify action uses node24 runtime
+        run: |
+          RUNTIME=$(grep 'using:' "$GITHUB_WORKSPACE/action.yml" | head -1 | awk '{print $2}' | tr -d "'")
+          echo "Runtime: $RUNTIME"
+          if [ "$RUNTIME" != "node24" ]; then
+            echo "FAIL: expected node24 runtime, got '$RUNTIME'"
+            exit 1
+          fi
+          echo "PASS: runtime is node24"
+
+      - name: Verify required inputs are declared in action.yml
+        run: |
+          if ! grep -q 'api-level:' "$GITHUB_WORKSPACE/action.yml"; then
+            echo "FAIL: api-level input not found in action.yml"
+            exit 1
+          fi
+          if ! grep -q 'script:' "$GITHUB_WORKSPACE/action.yml"; then
+            echo "FAIL: script input not found in action.yml"
+            exit 1
+          fi
+          echo "PASS: required inputs (api-level, script) are declared"
+
+      - name: Verify lib/main.js entrypoint exists
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/lib/main.js" ]; then
+            echo "FAIL: lib/main.js not found"
+            exit 1
+          fi
+          echo "PASS: lib/main.js entrypoint exists"
+
+      - name: Verify default input values in action.yml
+        run: |
+          if ! grep -q "default: 'default'" "$GITHUB_WORKSPACE/action.yml"; then
+            echo "FAIL: target default not found"
+            exit 1
+          fi
+          if ! grep -q "default: 'x86'" "$GITHUB_WORKSPACE/action.yml"; then
+            echo "FAIL: arch default not found"
+            exit 1
+          fi
+          if ! grep -q "default: 'test'" "$GITHUB_WORKSPACE/action.yml"; then
+            echo "FAIL: avd-name default not found"
+            exit 1
+          fi
+          echo "PASS: default input values are correct"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-level: 29
+          script: echo "hello from emulator"
+
+      - name: Note about emulator step
+        run: |
+          echo "The emulator action step is expected to fail in act (no KVM/Android SDK)."
+          echo "Static structure checks above are the meaningful assertions."
+          echo "PASS"
