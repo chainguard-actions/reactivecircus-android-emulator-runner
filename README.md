@@ -1,4 +1,4 @@
-# reactivecircus/android-emulator-runner
+# ReactiveCircus/android-emulator-runner
 
 Hardened GitHub Action by [Chainguard](https://www.chainguard.dev).
 
