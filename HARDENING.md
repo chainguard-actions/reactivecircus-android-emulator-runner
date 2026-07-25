@@ -10,71 +10,51 @@
 
 **Harden Agent Version:** `2`
 
-Action **ReactiveCircus--android-emulator-runner/v2.38.0** was hardened automatically. 7 finding(s) were identified and resolved across 1 iteration(s).
+Action **ReactiveCircus--android-emulator-runner/v2.38.0** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
 ### unpinned-uses (severity: high)
 
-Workflow uses mutable tag references instead of pinned SHA commits. Unpinned refs: `actions/checkout@v6`, `actions/setup-java@v5`, `actions/cache@v5`, `gradle/actions/setup-gradle@v5`. These should be pinned to full 40-character commit SHAs.
+Multiple workflow files reference GitHub Actions using mutable version tags instead of pinned 40-character commit SHAs. This exposes the workflow to supply-chain attacks if the referenced action tag is moved or compromised.
+
+.github/workflows/action-types.yml:
+  - uses: actions/checkout@v6
+  - uses: krzema12/github-actions-typing@v2
+
+.github/workflows/main.yml:
+  - uses: actions/checkout@v6
+  - uses: actions/setup-java@v5
+  - uses: actions/cache@v5
+  - uses: gradle/actions/setup-gradle@v5
+
+.github/workflows/manually.yml:
+  - uses: actions/checkout@v6
+  - uses: actions/setup-java@v5
+  - uses: gradle/actions/setup-gradle@v5
 
 Locations:
 
-- `.github/workflows/main.yml:37`
-- `.github/workflows/main.yml:43`
-- `.github/workflows/main.yml:47`
-- `.github/workflows/main.yml:57`
-
-### unpinned-uses (severity: high)
-
-Workflow uses mutable tag references instead of pinned SHA commits. Unpinned refs: `actions/checkout@v6`, `actions/setup-java@v5`, `gradle/actions/setup-gradle@v5`. These should be pinned to full 40-character commit SHAs.
-
-Locations:
-
-- `.github/workflows/manually.yml:37`
-- `.github/workflows/manually.yml:43`
-- `.github/workflows/manually.yml:47`
-
-### unpinned-uses (severity: high)
-
-Workflow uses mutable tag references instead of pinned SHA commits. Unpinned refs: `actions/checkout@v6`, `krzema12/github-actions-typing@v2`. These should be pinned to full 40-character commit SHAs.
-
-Locations:
-
-- `.github/workflows/action-types.yml:11`
 - `.github/workflows/action-types.yml:12`
+- `.github/workflows/action-types.yml:13`
+- `.github/workflows/main.yml:46`
+- `.github/workflows/main.yml:52`
+- `.github/workflows/main.yml:56`
+- `.github/workflows/main.yml:64`
+- `.github/workflows/manually.yml:42`
+- `.github/workflows/manually.yml:50`
+- `.github/workflows/manually.yml:54`
 
 ### missing-permissions (severity: medium)
 
-Workflow file has no top-level `permissions:` key and no job-level `permissions:` key on any job. Without explicit permissions, the workflow inherits the repository's default token permissions, which may be overly broad. Add a top-level `permissions: {}` or minimal scoped permissions.
+None of the workflow files define a top-level `permissions:` block, and no job in any file defines job-level permissions. Without explicit permissions, workflows run with the default token permissions (which may be read-write depending on repository settings), granting broader access than necessary. This is especially concerning for pr-comment.yml which triggers on `issue_comment` events (which can be triggered by untrusted contributors on pull requests) and main.yml which triggers on `pull_request` events.
 
 Locations:
 
 - `.github/workflows/main.yml:1`
-
-### missing-permissions (severity: medium)
-
-Workflow file has no top-level `permissions:` key and no job-level `permissions:` key on any job. Without explicit permissions, the workflow inherits the repository's default token permissions, which may be overly broad. Add a top-level `permissions: {}` or minimal scoped permissions.
-
-Locations:
-
 - `.github/workflows/manually.yml:1`
-
-### missing-permissions (severity: medium)
-
-Workflow file has no top-level `permissions:` key and no job-level `permissions:` key on any job. Without explicit permissions, the workflow inherits the repository's default token permissions, which may be overly broad. Add a top-level `permissions: {}` or minimal scoped permissions.
-
-Locations:
-
-- `.github/workflows/action-types.yml:1`
-
-### missing-permissions (severity: medium)
-
-Workflow file has no top-level `permissions:` key and no job-level `permissions:` key on any job. The `pr-comment.yml` workflow is triggered by `issue_comment` events (which can be created by any user on a PR) and delegates to `main.yml` via `workflow_call`, but has no permissions restriction. Add a top-level `permissions: {}` or minimal scoped permissions.
-
-Locations:
-
 - `.github/workflows/pr-comment.yml:1`
+- `.github/workflows/action-types.yml:1`
 
 ## Iteration Notes
 
@@ -84,15 +64,5 @@ Locations:
 
 **Notes:**
 
-Fixed all 7 findings across 4 workflow files:
-
-1. main.yml: Added `permissions: {}` at top level; pinned actions/checkout@v6 → @d23441a48e516b6c34aea4fa41551a30e30af803, actions/setup-java@v5 → @03ad4de0992f5dab5e18fcb136590ce7c4a0ac95, actions/cache@v5 → @caa296126883cff596d87d8935842f9db880ef25, gradle/actions/setup-gradle@v5 → @0723195856401067f7a2779048b490ace7a47d7c
-
-2. manually.yml: Added `permissions: {}` at top level; pinned actions/checkout@v6, actions/setup-java@v5, gradle/actions/setup-gradle@v5 with same SHAs as above
-
-3. action-types.yml: Added `permissions: {}` at top level; pinned actions/checkout@v6 → @d23441a48e516b6c34aea4fa41551a30e30af803, krzema12/github-actions-typing@v2 → @9ddf35b71a482be7d8922b28e8d00df16b77e315
-
-4. pr-comment.yml: Added `permissions: {}` at top level (no unpinned actions in this file)
-
-All pinned SHAs were resolved via lookup_action_sha and include the original tag as a comment for readability.
+Pinned all action references to full 40-character commit SHAs in action-types.yml, main.yml, and manually.yml. Added top-level `permissions: {}` blocks to all four workflow files (action-types.yml, main.yml, manually.yml, pr-comment.yml) to enforce least-privilege access. The pr-comment.yml file is especially important as it triggers on issue_comment events which can be initiated by untrusted contributors.
 

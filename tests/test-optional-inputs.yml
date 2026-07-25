@@ -1,8 +1,11 @@
-name: Test optional inputs - Android Emulator Runner
-# Exercises all optional inputs not covered by other test files.
+name: Test optional inputs coverage - Android Emulator Runner
+# Validates that all optional inputs are accepted by the action.
 # The emulator cannot actually boot in act (no KVM/Android SDK),
-# so the action step uses continue-on-error: true. The meaningful
-# assertions are the static checks that verify input declarations.
+# so the action step uses continue-on-error: true.
+# This test exists to satisfy input coverage requirements for:
+#   cmake, disk-size, emulator-build, heap-size, ndk,
+#   pre-emulator-launch-script, profile, ram-size, sdcard-path-or-size,
+#   system-image-api-level, working-directory
 on:
   workflow_dispatch:
 jobs:
@@ -11,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Verify optional inputs are declared in action.yml
+      - name: Verify action.yml declares all optional inputs under test
         run: |
           ACTION_YML="$GITHUB_WORKSPACE/action.yml"
 
@@ -24,22 +27,22 @@ jobs:
             echo "  OK: ${input_name}"
           }
 
-          echo "Checking inputs covered by this test..."
-          check_input "system-image-api-level"
-          check_input "profile"
-          check_input "ram-size"
-          check_input "heap-size"
-          check_input "sdcard-path-or-size"
+          echo "Checking optional inputs covered by this test..."
+          check_input "cmake"
           check_input "disk-size"
           check_input "emulator-build"
-          check_input "working-directory"
+          check_input "heap-size"
           check_input "ndk"
-          check_input "cmake"
           check_input "pre-emulator-launch-script"
-          echo "PASS: all targeted optional inputs declared"
+          check_input "profile"
+          check_input "ram-size"
+          check_input "sdcard-path-or-size"
+          check_input "system-image-api-level"
+          check_input "working-directory"
+          echo "PASS: all optional inputs declared in action.yml"
 
-      - name: Create working directory for emulator action
-        run: mkdir -p "$GITHUB_WORKSPACE/android-project"
+      - name: Create working directory for test
+        run: mkdir -p "$GITHUB_WORKSPACE/android-subdir"
 
       - id: action
         uses: .
@@ -50,17 +53,17 @@ jobs:
           profile: Nexus 6
           ram-size: 2048M
           heap-size: 512M
-          sdcard-path-or-size: 1000M
+          sdcard-path-or-size: 512M
           disk-size: 6G
-          emulator-build: 7425822
-          working-directory: ./android-project
+          emulator-build: '6061023'
           ndk: 21.0.6113669
           cmake: 3.10.2.4988404
           pre-emulator-launch-script: echo "pre-launch"
+          working-directory: ./android-subdir
           script: echo "hello from emulator"
 
       - name: Note about emulator step
         run: |
           echo "The emulator action step is expected to fail in act (no KVM/Android SDK)."
-          echo "Input declaration checks above are the meaningful assertions."
+          echo "Optional input declaration checks above are the meaningful assertions."
           echo "PASS"
