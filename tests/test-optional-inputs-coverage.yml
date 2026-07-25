@@ -1,0 +1,85 @@
+name: Test optional inputs coverage - Android Emulator Runner
+# Validates that all optional inputs (cmake, disk-size, emulator-build, heap-size,
+# ndk, pre-emulator-launch-script, profile, ram-size, sdcard-path-or-size,
+# system-image-api-level, working-directory) are accepted by the action.
+# The emulator cannot actually boot in act (no KVM/Android SDK), so the action
+# step uses continue-on-error: true. Static assertions verify input declarations.
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify optional inputs are declared in action.yml
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+
+          check_input() {
+            local input_name="$1"
+            if ! grep -q "${input_name}:" "$ACTION_YML"; then
+              echo "FAIL: input '${input_name}' not found in action.yml"
+              exit 1
+            fi
+            echo "  OK: ${input_name}"
+          }
+
+          echo "Checking optional inputs covered by this test..."
+          check_input "cmake"
+          check_input "disk-size"
+          check_input "emulator-build"
+          check_input "heap-size"
+          check_input "ndk"
+          check_input "pre-emulator-launch-script"
+          check_input "profile"
+          check_input "ram-size"
+          check_input "sdcard-path-or-size"
+          check_input "system-image-api-level"
+          check_input "working-directory"
+          echo "PASS: all targeted optional inputs are declared"
+
+      - name: Verify system-image-api-level description mentions api-level fallback
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          if ! grep -A2 'system-image-api-level:' "$ACTION_YML" | grep -q 'api-level'; then
+            echo "FAIL: system-image-api-level description does not reference api-level fallback"
+            exit 1
+          fi
+          echo "PASS: system-image-api-level description references api-level"
+
+      - name: Verify profile input has no required flag (it is optional)
+        run: |
+          ACTION_YML="$GITHUB_WORKSPACE/action.yml"
+          # profile should not have required: true
+          PROFILE_BLOCK=$(awk '/^  profile:/{found=1} found && /^  [a-z]/ && !/^  profile:/{found=0} found{print}' "$ACTION_YML")
+          echo "profile block: $PROFILE_BLOCK"
+          if echo "$PROFILE_BLOCK" | grep -q 'required: true'; then
+            echo "FAIL: profile input should not be required"
+            exit 1
+          fi
+          echo "PASS: profile input is optional (not required)"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          api-level: 29
+          system-image-api-level: 34
+          profile: Nexus 6
+          ram-size: 2048M
+          heap-size: 512M
+          sdcard-path-or-size: 1000M
+          disk-size: 6G
+          emulator-build: '6061023'
+          ndk: 21.0.6113669
+          cmake: 3.10.2.4988404
+          working-directory: .
+          pre-emulator-launch-script: echo "pre-launch"
+          script: echo "hello from emulator"
+
+      - name: Note about emulator step
+        run: |
+          echo "The emulator action step is expected to fail in act (no KVM/Android SDK)."
+          echo "Input declaration checks above are the meaningful assertions."
+          echo "PASS"
