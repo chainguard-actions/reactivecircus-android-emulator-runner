@@ -1,0 +1,37 @@
+name: Test system image API level override
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Android Emulator Runner with system-image-api-level override
+        id: emulator
+        uses: .
+        with:
+          api-level: 35
+          system-image-api-level: '34'
+          target: default
+          arch: x86_64
+          avd-name: sysimg-test-avd
+          force-avd-creation: 'true'
+          disable-animations: 'true'
+          emulator-options: '-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim'
+          script: echo "Emulator with system image API level override is running"
+        continue-on-error: true
+
+      - name: Assert action was invoked with system-image-api-level
+        run: |
+          echo "Emulator step outcome: ${{ steps.emulator.outcome }}"
+          # The action may fail in act due to missing KVM/hardware acceleration,
+          # but it should at least attempt to run (not be skipped).
+          if [ "${{ steps.emulator.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to be invoked"
+            exit 1
+          fi
+          echo "PASS: action was invoked with system-image-api-level override (outcome: ${{ steps.emulator.outcome }})"

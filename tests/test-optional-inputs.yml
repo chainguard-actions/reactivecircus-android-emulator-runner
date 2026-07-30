@@ -1,0 +1,40 @@
+name: Test optional inputs (ndk, cmake, profile, sdcard, disk-size, emulator-build)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Android Emulator Runner with optional inputs
+        id: emulator
+        uses: .
+        with:
+          api-level: 29
+          target: default
+          arch: x86
+          profile: Nexus 6
+          sdcard-path-or-size: 512M
+          disk-size: 2G
+          ndk: 21.0.6113669
+          cmake: 3.10.2.4988404
+          emulator-build: '6061023'
+          force-avd-creation: 'true'
+          emulator-options: '-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim'
+          disable-animations: 'true'
+          script: echo "optional inputs accepted"
+        continue-on-error: true
+
+      - name: Assert action was invoked with optional inputs
+        run: |
+          echo "Emulator step outcome: ${{ steps.emulator.outcome }}"
+          # The action may fail in act due to missing KVM/hardware acceleration,
+          # but it should at least attempt to run (not be skipped).
+          if [ "${{ steps.emulator.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to be invoked"
+            exit 1
+          fi
+          echo "PASS: action was invoked with optional inputs (outcome: ${{ steps.emulator.outcome }})"

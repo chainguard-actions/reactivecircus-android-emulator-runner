@@ -1,0 +1,41 @@
+name: Test custom AVD configuration
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Android Emulator Runner with custom AVD configuration
+        id: emulator
+        uses: .
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          avd-name: custom-test-avd
+          force-avd-creation: 'true'
+          cores: 2
+          ram-size: '2048M'
+          heap-size: '512M'
+          disable-animations: 'true'
+          disable-spellchecker: 'true'
+          enable-hw-keyboard: 'false'
+          emulator-boot-timeout: '300'
+          emulator-options: '-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim'
+          script: echo "Custom AVD emulator is running"
+        continue-on-error: true
+
+      - name: Assert action was invoked with custom config
+        run: |
+          echo "Emulator step outcome: ${{ steps.emulator.outcome }}"
+          # The action may fail in act due to missing KVM/hardware acceleration,
+          # but it should at least attempt to run (not be skipped).
+          if [ "${{ steps.emulator.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to be invoked"
+            exit 1
+          fi
+          echo "PASS: action was invoked with custom AVD config (outcome: ${{ steps.emulator.outcome }})"

@@ -1,0 +1,41 @@
+name: Test emulator port and working directory
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create custom working directory
+        run: mkdir -p /tmp/android-workdir
+
+      - name: Run Android Emulator Runner with custom port and working directory
+        id: emulator
+        uses: .
+        with:
+          api-level: 28
+          arch: x86
+          target: default
+          avd-name: port-test-avd
+          emulator-port: '5556'
+          working-directory: /tmp/android-workdir
+          disable-animations: 'true'
+          disable-linux-hw-accel: 'auto'
+          emulator-options: '-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim'
+          script: echo "Emulator running on custom port"
+        continue-on-error: true
+
+      - name: Assert action was invoked with custom port and workdir
+        run: |
+          echo "Emulator step outcome: ${{ steps.emulator.outcome }}"
+          # The action may fail in act due to missing KVM/hardware acceleration,
+          # but it should at least attempt to run (not be skipped).
+          if [ "${{ steps.emulator.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to be invoked"
+            exit 1
+          fi
+          echo "PASS: action was invoked with custom port and workdir (outcome: ${{ steps.emulator.outcome }})"

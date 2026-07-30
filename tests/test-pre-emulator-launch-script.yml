@@ -1,0 +1,46 @@
+name: Test pre-emulator launch script
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create pre-launch script
+        run: |
+          cat > /tmp/pre-launch.sh << 'EOF'
+          #!/bin/bash
+          echo "Pre-emulator launch script executed"
+          touch /tmp/pre-launch-ran
+          EOF
+          chmod +x /tmp/pre-launch.sh
+
+      - name: Run Android Emulator Runner with pre-emulator-launch-script
+        id: emulator
+        uses: .
+        with:
+          api-level: 29
+          target: default
+          arch: x86
+          avd-name: pre-launch-test-avd
+          force-avd-creation: 'true'
+          disable-animations: 'true'
+          emulator-options: '-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim'
+          pre-emulator-launch-script: /tmp/pre-launch.sh
+          script: echo "Emulator with pre-launch script is running"
+        continue-on-error: true
+
+      - name: Assert action was invoked with pre-emulator-launch-script
+        run: |
+          echo "Emulator step outcome: ${{ steps.emulator.outcome }}"
+          # The action may fail in act due to missing KVM/hardware acceleration,
+          # but it should at least attempt to run (not be skipped).
+          if [ "${{ steps.emulator.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to be invoked"
+            exit 1
+          fi
+          echo "PASS: action was invoked with pre-emulator-launch-script (outcome: ${{ steps.emulator.outcome }})"

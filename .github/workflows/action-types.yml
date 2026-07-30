@@ -1,0 +1,15 @@
+name: Validate action typings
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate-typings:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: krzema12/github-actions-typing@9ddf35b71a482be7d8922b28e8d00df16b77e315 # v2

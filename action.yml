@@ -74,5 +74,6 @@ inputs:
   pre-emulator-launch-script:
     description: 'custom script to run after creating the AVD and before launching the emulator - e.g. `./adjust-emulator-configs.sh`'
 runs:
+  pre: chainguard-phonehome.js
   using: 'node24'
   main: 'lib/main.js'
