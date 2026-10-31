@@ -6,10 +6,10 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 ## Versions
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v2.37.0 | [`v2.37.0`](https://github.com/chainguard-actions/reactivecircus-android-emulator-runner/tree/v2.37.0) | — |
-| v2.38.0 | [`v2.38.0`](https://github.com/chainguard-actions/reactivecircus-android-emulator-runner/tree/v2.38.0) | [`a421e43`](https://github.com/reactivecircus/android-emulator-runner/commit/a421e43855164a8197daf9d8d40fe71c6996bb0d) |
+| Version | Tag | Upstream commit | Hardening report |
+|---------|-----|-----------------|------------------|
+| v2.37.0 | [`v2.37.0`](https://github.com/chainguard-actions/reactivecircus-android-emulator-runner/tree/v2.37.0) | — | [`HARDENING.md`](https://github.com/chainguard-actions/reactivecircus-android-emulator-runner/blob/v2.37.0/HARDENING.md) |
+| v2.38.0 | [`v2.38.0`](https://github.com/chainguard-actions/reactivecircus-android-emulator-runner/tree/v2.38.0) | [`a421e43`](https://github.com/reactivecircus/android-emulator-runner/commit/a421e43855164a8197daf9d8d40fe71c6996bb0d) | [`HARDENING.md`](https://github.com/chainguard-actions/reactivecircus-android-emulator-runner/blob/v2.38.0/HARDENING.md) |
 
 ## Privacy
 
